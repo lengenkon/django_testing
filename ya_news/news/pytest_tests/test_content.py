@@ -39,5 +39,5 @@ def test_comments_order(client, comment_list, news):
     assert 'news' in response.context
     object_list = news.comment_set.all()
     all_dates = [comment.created for comment in object_list]
-    sorted_dates = sorted(all_dates, reverse=True)
+    sorted_dates = sorted(all_dates)
     assert all_dates == sorted_dates

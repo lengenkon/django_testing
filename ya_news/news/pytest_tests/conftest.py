@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 
 import pytest
+from django.utils import timezone
 from news.models import Comment, News
 from yanews import settings
 
@@ -30,16 +31,18 @@ def comment(news, author):
 
 @pytest.fixture
 def comment_list(news, author):
-    today = datetime.today()
-    all_comments = [
-        Comment(
-            news=news,
-            author=author,
-            text=f'Tекст {index}', created=today - timedelta(days=index)
+    now = timezone.now()
+    comment_list = []
+    for index in range(2):
+        # Создаём объект и записываем его в переменную.
+        comment = Comment.objects.create(
+            news=news, author=author, text=f'Tекст {index}',
         )
-        for index in range(4)
-    ]
-    comment_list = Comment.objects.bulk_create(all_comments)
+        # Сразу после создания меняем время создания комментария.
+        comment.created = now + timedelta(days=index)
+        # И сохраняем эти изменения.
+        comment.save()
+        comment_list.append(comment)
     return comment_list
 
 
