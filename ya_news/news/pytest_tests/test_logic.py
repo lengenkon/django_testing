@@ -15,6 +15,8 @@ def test_user_can_create_comment(admin_client, form_data, news):
     assert Comment.objects.count() == 1
     new_comment = Comment.objects.get()
     assert new_comment.text == form_data['text']
+    assert new_comment.news.id == news.id
+    assert new_comment.author.username == 'admin'
 
 
 @pytest.mark.django_db
@@ -25,18 +27,20 @@ def test_anonymous_user_cant_create_comment(client, form_data, news):
     expected_url = f'{login_url}?next={url}'
     # Проверяем, что произошла переадресация на страницу логина:
     assertRedirects(response, expected_url)
-    assert Comment.objects.count() == 0
+    assert not Comment.objects.exists()
 
 
 @pytest.mark.django_db
-def test_user_cant_use_bad_words(news, admin_client):
+@pytest.mark.parametrize(
+    'bad_words', BAD_WORDS
+)
+def test_user_cant_use_bad_words(news, admin_client, bad_words):
     url = reverse('news:detail', args=(news.id,))
-    bad_words_data = {'text': f'Какой-то текст, {BAD_WORDS[0]}, еще текст'}
+    bad_words_data = {'text': f'Какой-то текст, {bad_words}, еще текст'}
     response = admin_client.post(url, data=bad_words_data)
     assertFormError(response, 'form', 'text', errors=WARNING)
     # Дополнительно убедимся, что комментарий не был создан.
-    comments_count = Comment.objects.count()
-    assert comments_count == 0
+    assert not Comment.objects.exists()
 
 
 @pytest.mark.django_db
@@ -58,7 +62,7 @@ def test_author_can_edit_delete_comment(
         comment.refresh_from_db()
         assert comment.text == form_data['text']
     else:
-        assert Comment.objects.count() == 0
+        assert not Comment.objects.exists()
 
 
 @pytest.mark.django_db
@@ -76,7 +80,8 @@ def test_user_cant_edit_delete_comment_of_another_author(
     response = admin_client.post(url, data=data)
     assert response.status_code == HTTPStatus.NOT_FOUND
     if data is not None:
+        old_comment = comment
         comment.refresh_from_db()
-        assert comment.text == 'Текст'
+        assert comment.text == old_comment.text
     else:
         assert Comment.objects.count() == 1

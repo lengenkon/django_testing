@@ -33,7 +33,7 @@ def comment(news, author):
 def comment_list(news, author):
     now = timezone.now()
     comment_list = []
-    for index in range(2):
+    for index in range(10):
         # Создаём объект и записываем его в переменную.
         comment = Comment.objects.create(
             news=news, author=author, text=f'Tекст {index}',

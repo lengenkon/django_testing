@@ -2,6 +2,7 @@ import pytest
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.urls import reverse
+from news.forms import CommentForm
 
 User = get_user_model()
 
@@ -30,6 +31,8 @@ def test_pages_contains_form(parametrized_client, form_is, news):
     url = reverse('news:detail', args=(news.id,))
     response = parametrized_client.get(url)
     assert ('form' in response.context) is form_is
+    if form_is:
+        assert isinstance(response.context['form'], CommentForm)
 
 
 @pytest.mark.django_db

@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
+from notes.forms import NoteForm
 from notes.models import Note
 
 User = get_user_model()
@@ -42,3 +43,4 @@ class TestHomePage(TestCase):
                 self.auth_client.force_login(self.author)
                 response = self.auth_client.get(reverse(name, kwargs=kwargs))
                 self.assertIn('form', response.context)
+                self.assertIsInstance(response.context['form'], NoteForm)
